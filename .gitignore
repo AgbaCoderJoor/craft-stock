@@ -12,9 +12,6 @@ dist/
 .env.local
 .env.*.local
 
-# Prisma
-apps/backend/prisma/migrations/
-
 # OS
 .DS_Store
 Thumbs.db
