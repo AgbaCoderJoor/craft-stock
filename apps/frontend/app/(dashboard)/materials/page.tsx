@@ -126,12 +126,12 @@ export default function MaterialsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold">Materials</h2>
+          <h2 className="text-xl sm:text-2xl font-bold">Materials</h2>
           <p className="text-sm text-muted-foreground mt-1">{materials.length} material{materials.length !== 1 ? "s" : ""} in inventory</p>
         </div>
-        {canCreateMaterial(role ?? "") && <Button onClick={openCreate}>Add Material</Button>}
+        {canCreateMaterial(role ?? "") && <Button className="w-full sm:w-auto" onClick={openCreate}>Add Material</Button>}
       </div>
 
       {isLoading ? (
@@ -151,7 +151,7 @@ export default function MaterialsPage() {
             <DialogTitle>{editing ? "Edit Material" : "Add Material"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Name</Label>
                 <Input {...register("name", { required: true })} />
@@ -178,7 +178,7 @@ export default function MaterialsPage() {
                 <Label>Min Stock</Label>
                 <Input type="number" step="0.01" {...register("minimum_stock", { valueAsNumber: true, required: true })} />
               </div>
-              <div className="space-y-1 col-span-2">
+              <div className="space-y-1 sm:col-span-2">
                 <Label>Batch Number</Label>
                 <Input {...register("batch_number")} />
               </div>

@@ -72,7 +72,7 @@ export default function AuditLogsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold">Audit Logs</h2>
+        <h2 className="text-xl sm:text-2xl font-bold">Audit Logs</h2>
         <p className="text-sm text-muted-foreground mt-1">Read-only record of all system mutations.</p>
       </div>
 

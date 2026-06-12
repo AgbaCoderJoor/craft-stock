@@ -132,7 +132,7 @@ export function DataTable<TData, TValue>({
             placeholder={searchPlaceholder}
             value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
             onChange={(e) => table.getColumn(searchKey)?.setFilterValue(e.target.value)}
-            className="max-w-sm bg-white"
+            className="w-full sm:max-w-sm bg-white"
           />
         )}
 
@@ -143,7 +143,7 @@ export function DataTable<TData, TValue>({
               <button
                 key={r}
                 onClick={() => applyQuick(r)}
-                className={`px-2.5 py-1.5 rounded text-xs font-medium border transition-colors capitalize ${
+                className={`px-3 py-2 sm:px-2.5 sm:py-1.5 rounded text-xs font-medium border transition-colors capitalize ${
                   activeQuick === r
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-white text-muted-foreground border-gray-200 hover:border-primary hover:text-primary"
@@ -237,7 +237,7 @@ export function DataTable<TData, TValue>({
 
       {/* Pagination */}
       {table.getPageCount() > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col-reverse items-center gap-3 sm:flex-row sm:justify-between">
           <p className="text-sm text-muted-foreground">
             Showing {table.getState().pagination.pageIndex * pageSize + 1}–
             {Math.min(
@@ -246,10 +246,11 @@ export function DataTable<TData, TValue>({
             )}{" "}
             of {table.getFilteredRowModel().rows.length}
           </p>
-          <div className="flex gap-2">
+          <div className="flex w-full gap-2 sm:w-auto">
             <Button
               variant="outline"
               size="sm"
+              className="min-h-[40px] flex-1 sm:min-h-0 sm:flex-none"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
@@ -258,6 +259,7 @@ export function DataTable<TData, TValue>({
             <Button
               variant="outline"
               size="sm"
+              className="min-h-[40px] flex-1 sm:min-h-0 sm:flex-none"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >

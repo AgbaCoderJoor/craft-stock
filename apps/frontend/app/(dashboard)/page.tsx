@@ -51,10 +51,10 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold">Dashboard</h2>
+        <h2 className="text-xl sm:text-2xl font-bold">Dashboard</h2>
         {user && (
           <p className="text-sm text-muted-foreground mt-1">
             Welcome back,{" "}
@@ -66,7 +66,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiCard title="Total Materials" value={materials.length} subtitle="unique SKUs" />
         <KpiCard
           title="Low Stock Alerts"
@@ -86,10 +86,10 @@ export default function DashboardPage() {
 
       {/* Movements Trend + Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <Card className="min-w-0 lg:col-span-2">
+          <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pb-2">
             <CardTitle className="text-base font-semibold">Stock Movement Trend</CardTitle>
-            <div className="flex gap-1">
+            <div className="flex flex-wrap gap-1">
               {DAYS_OPTIONS.map((d) => (
                 <button
                   key={d}
@@ -110,7 +110,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Movement Distribution</CardTitle>
           </CardHeader>
@@ -123,7 +123,7 @@ export default function DashboardPage() {
       {/* Category Value + Top Materials — admin only (pricing data) */}
       {canViewPricingCharts(role ?? "") && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Inventory Value by Category</CardTitle>
             </CardHeader>
@@ -132,7 +132,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Top Materials by Value</CardTitle>
               <p className="text-xs text-muted-foreground">
@@ -156,6 +156,7 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
@@ -176,6 +177,7 @@ export default function DashboardPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </CardContent>
         </Card>
       )}

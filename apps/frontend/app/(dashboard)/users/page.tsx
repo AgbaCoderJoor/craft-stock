@@ -110,12 +110,12 @@ export default function UsersPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold">Users</h2>
+          <h2 className="text-xl sm:text-2xl font-bold">Users</h2>
           <p className="text-sm text-muted-foreground mt-1">Admin-only — manage who has access to CraftStock.</p>
         </div>
-        <Button onClick={() => { reset(); setShowPassword(false); setOpen(true); }}>Add User</Button>
+        <Button className="w-full sm:w-auto" onClick={() => { reset(); setShowPassword(false); setOpen(true); }}>Add User</Button>
       </div>
 
       {isLoading ? (

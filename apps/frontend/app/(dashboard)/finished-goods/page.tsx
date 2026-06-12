@@ -106,12 +106,12 @@ export default function FinishedGoodsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold">Finished Goods</h2>
+          <h2 className="text-xl sm:text-2xl font-bold">Finished Goods</h2>
           <p className="text-sm text-muted-foreground mt-1">{goods.length} product type{goods.length !== 1 ? "s" : ""}</p>
         </div>
-        {canCreateFinishedGood(role ?? "") && <Button onClick={openCreate}>Add Finished Good</Button>}
+        {canCreateFinishedGood(role ?? "") && <Button className="w-full sm:w-auto" onClick={openCreate}>Add Finished Good</Button>}
       </div>
 
       {isLoading ? (
@@ -131,7 +131,7 @@ export default function FinishedGoodsPage() {
             <DialogTitle>{editing ? "Edit Finished Good" : "Add Finished Good"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Name</Label>
                 <Input {...register("name", { required: true })} />
@@ -156,7 +156,7 @@ export default function FinishedGoodsPage() {
                 <Label>Current Qty</Label>
                 <Input type="number" {...register("current_quantity", { valueAsNumber: true })} />
               </div>
-              <div className="space-y-1 col-span-2">
+              <div className="space-y-1 sm:col-span-2">
                 <Label>Production Date</Label>
                 <Input type="date" {...register("production_date")} />
               </div>

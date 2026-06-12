@@ -52,21 +52,21 @@ export default function ReportsPage() {
   const totalSold = finishedGoods.reduce((s, g) => s + g.quantity_sold, 0);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       <div>
-        <h2 className="text-2xl font-bold">Reports</h2>
+        <h2 className="text-xl sm:text-2xl font-bold">Reports</h2>
         <p className="text-sm text-muted-foreground mt-1">Overview of inventory, movements, and production</p>
       </div>
 
       {/* Summary KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {canViewInventoryValue(role ?? "") && (
           <Card>
             <CardHeader className="pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Inventory Value</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-gray-900">₦{totalInventoryValue.toLocaleString("en-NG", { minimumFractionDigits: 2 })}</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 break-words">₦{totalInventoryValue.toLocaleString("en-NG", { minimumFractionDigits: 2 })}</p>
             </CardContent>
           </Card>
         )}
@@ -80,7 +80,7 @@ export default function ReportsPage() {
               <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-gray-900">{value}</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 break-words">{value}</p>
             </CardContent>
           </Card>
         ))}
@@ -88,12 +88,12 @@ export default function ReportsPage() {
 
       {/* Movements Trend */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pb-2">
           <div>
             <CardTitle className="text-base font-semibold">Stock Movement Trend</CardTitle>
             <p className="text-xs text-muted-foreground mt-0.5">IN / OUT / Adjustments / Production over time</p>
           </div>
-          <div className="flex gap-1 flex-wrap justify-end">
+          <div className="flex gap-1 flex-wrap sm:justify-end">
             {DAYS_OPTIONS.map((d) => (
               <button
                 key={d}
@@ -116,7 +116,7 @@ export default function ReportsPage() {
 
       {/* Distribution — visible to all; Category — admin only */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Movement Distribution</CardTitle>
             <p className="text-xs text-muted-foreground mt-0.5">Count of each movement type</p>
@@ -127,7 +127,7 @@ export default function ReportsPage() {
         </Card>
 
         {canViewPricingCharts(role ?? "") && (
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Inventory Value by Category</CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">Total value of materials in each category</p>
@@ -142,14 +142,14 @@ export default function ReportsPage() {
       {/* Top Materials — admin only */}
       {canViewPricingCharts(role ?? "") && (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pb-2">
             <div>
               <CardTitle className="text-base font-semibold">Top Materials by Value</CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Sorted by (cost price × quantity) · <span className="text-rose-500">Red = low stock</span>
               </p>
             </div>
-            <div className="flex gap-1">
+            <div className="flex flex-wrap gap-1">
               {TOP_OPTIONS.map((n) => (
                 <button
                   key={n}

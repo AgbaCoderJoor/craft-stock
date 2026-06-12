@@ -146,13 +146,13 @@ export default function StockMovementsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold">Stock Movements</h2>
+          <h2 className="text-xl sm:text-2xl font-bold">Stock Movements</h2>
           <p className="text-sm text-muted-foreground mt-1">{movements.length} movement{movements.length !== 1 ? "s" : ""} recorded</p>
         </div>
         {canCreateMovement(role ?? "") && (
-          <Button onClick={() => { reset(); setOpen(true); }}>Log Movement</Button>
+          <Button className="w-full sm:w-auto" onClick={() => { reset(); setOpen(true); }}>Log Movement</Button>
         )}
       </div>
 
