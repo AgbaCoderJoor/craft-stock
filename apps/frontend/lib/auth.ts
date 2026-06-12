@@ -4,6 +4,7 @@ interface TokenPayload {
   user_id: number;
   role: string;
   email: string;
+  business_id: number;
   exp: number;
 }
 

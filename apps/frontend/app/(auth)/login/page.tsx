@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
@@ -47,6 +48,22 @@ export default function LoginPage() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
         "Invalid email or password";
+      if (message.includes("verify your email")) {
+        toast.error(message, {
+          action: {
+            label: "Resend link",
+            onClick: async () => {
+              try {
+                await api.post("/auth/resend-verification", { email: data.email });
+                toast.success("Verification link sent — check your email");
+              } catch {
+                toast.error("Could not resend the link — try again later");
+              }
+            },
+          },
+        });
+        return;
+      }
       toast.error(message);
     }
   };
@@ -83,7 +100,7 @@ export default function LoginPage() {
             </div>
           ))}
           <p className="text-xs text-[hsl(174,20%,55%)] pt-4">
-            Larah&apos;s Inventory · Powered by CraftStock
+            Powered by CraftStock
           </p>
         </div>
       </div>
@@ -160,12 +177,24 @@ export default function LoginPage() {
               {errors.password && (
                 <p className="text-xs text-destructive">{errors.password.message}</p>
               )}
+              <div className="text-right">
+                <Link href="/forgot-password" className="text-xs text-primary hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             <Button type="submit" className="w-full h-10 text-sm font-medium" disabled={isSubmitting}>
               {isSubmitting ? "Signing in…" : "Sign in"}
             </Button>
           </form>
+
+          <p className="text-sm text-muted-foreground text-center mt-6">
+            New to CraftStock?{" "}
+            <Link href="/signup" className="text-primary font-medium hover:underline">
+              Create your business
+            </Link>
+          </p>
         </div>
       </div>
     </div>

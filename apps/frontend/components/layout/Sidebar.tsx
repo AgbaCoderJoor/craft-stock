@@ -15,7 +15,7 @@ export function Sidebar({ className, onClose }: { className?: string; onClose?: 
   const pathname = usePathname();
   const router = useRouter();
   const qc = useQueryClient();
-  const { user } = useCurrentUser();
+  const { user, business } = useCurrentUser();
 
   const visibleNavItems = getVisibleNavItems(user?.role ?? "");
 
@@ -41,7 +41,9 @@ export function Sidebar({ className, onClose }: { className?: string; onClose?: 
           </div>
           <div className="flex-1">
             <p className="text-white font-bold text-sm leading-tight">CraftStock</p>
-            <p className="text-[hsl(174,30%,70%)] text-[10px] leading-tight">Larah&apos;s Inventory</p>
+            {business?.name && (
+              <p className="text-[hsl(174,30%,70%)] text-[10px] leading-tight truncate">{business.name}</p>
+            )}
           </div>
           <button
             onClick={onClose}

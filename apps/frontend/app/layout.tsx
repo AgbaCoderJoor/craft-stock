@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "CraftStock — Inventory Management",
-  description: "Inventory management for Larah's craft business",
+  description: "Inventory management for craft businesses",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

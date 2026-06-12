@@ -26,5 +26,6 @@ export function useCurrentUser() {
   return {
     user: query.data ?? null,
     role: query.data?.role ?? tokenPayload?.role ?? null,
+    business: query.data?.business ?? null,
   };
 }

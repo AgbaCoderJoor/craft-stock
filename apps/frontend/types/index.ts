@@ -4,6 +4,8 @@ export interface User {
   email: string;
   role: string;
   created_at: string;
+  // resolved by /auth/me; absent in the optimistic initialData from the token
+  business?: { business_id: number; name: string };
 }
 
 export interface Material {

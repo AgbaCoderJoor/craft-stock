@@ -5,10 +5,12 @@ import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { business } = useCurrentUser();
 
   useEffect(() => {
     setOpen(false);
@@ -47,6 +49,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <span className="text-white font-bold text-[10px]">C</span>
             </div>
             <span className="text-white font-bold text-sm">CraftStock</span>
+            {business?.name && (
+              <span className="text-[hsl(174,30%,70%)] text-xs truncate">· {business.name}</span>
+            )}
           </div>
         </header>
 
