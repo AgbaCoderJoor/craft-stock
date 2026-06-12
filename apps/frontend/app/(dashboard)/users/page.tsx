@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -45,6 +46,7 @@ const ROLE_COLORS: Record<string, string> = {
 export default function UsersPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, setValue, reset, formState: { isSubmitting } } = useForm<RegisterForm>();
 
   const { data: users = [], isLoading } = useQuery<UserRecord[]>({
@@ -113,7 +115,7 @@ export default function UsersPage() {
           <h2 className="text-2xl font-bold">Users</h2>
           <p className="text-sm text-muted-foreground mt-1">Admin-only — manage who has access to CraftStock.</p>
         </div>
-        <Button onClick={() => { reset(); setOpen(true); }}>Add User</Button>
+        <Button onClick={() => { reset(); setShowPassword(false); setOpen(true); }}>Add User</Button>
       </div>
 
       {isLoading ? (
@@ -143,7 +145,33 @@ export default function UsersPage() {
             </div>
             <div className="space-y-1">
               <Label>Password</Label>
-              <Input type="password" {...register("password", { required: true, minLength: 8 })} placeholder="Min 8 characters" />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  {...register("password", { required: true, minLength: 8 })}
+                  placeholder="Min 8 characters"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <span className="relative flex items-center justify-center w-4 h-4">
+                    <Eye
+                      className={`absolute transition-all duration-200 w-4 h-4 ${
+                        showPassword ? "opacity-100 scale-100" : "opacity-0 scale-75"
+                      }`}
+                    />
+                    <EyeOff
+                      className={`absolute transition-all duration-200 w-4 h-4 ${
+                        showPassword ? "opacity-0 scale-75" : "opacity-100 scale-100"
+                      }`}
+                    />
+                  </span>
+                </button>
+              </div>
             </div>
             <div className="space-y-1">
               <Label>Role</Label>

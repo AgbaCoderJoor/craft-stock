@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +29,7 @@ const features = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -125,14 +128,35 @@ export default function LoginPage() {
               <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                 Password
               </Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
-                className="h-10 bg-gray-50 border-gray-200 focus:bg-white"
-                {...register("password")}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  className="h-10 bg-gray-50 border-gray-200 focus:bg-white pr-10"
+                  {...register("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <span className="relative flex items-center justify-center w-4 h-4">
+                    <Eye
+                      className={`absolute transition-all duration-200 w-4 h-4 ${
+                        showPassword ? "opacity-100 scale-100" : "opacity-0 scale-75"
+                      }`}
+                    />
+                    <EyeOff
+                      className={`absolute transition-all duration-200 w-4 h-4 ${
+                        showPassword ? "opacity-0 scale-75" : "opacity-100 scale-100"
+                      }`}
+                    />
+                  </span>
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-xs text-destructive">{errors.password.message}</p>
               )}
