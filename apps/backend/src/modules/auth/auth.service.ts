@@ -3,6 +3,20 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../../config/db";
 import { AppError } from "../../utils/errors";
 import { logAudit } from "../../middleware/audit.middleware";
+import { createAuthToken, consumeAuthToken } from "../../utils/tokens";
+import { sendVerificationEmail, sendPasswordResetEmail, emailEnabled } from "../../utils/email";
+
+const slugify = (name: string): string =>
+  name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+// dev_link lets the flows be exercised end-to-end before email sending is
+// configured; it is never exposed in production.
+const devLink = (link: string): string | undefined =>
+  !emailEnabled() && process.env.NODE_ENV !== "production" ? link : undefined;
 
 export const loginUser = async (email: string, password: string) => {
   const user = await prisma.user.findUnique({
@@ -128,4 +142,109 @@ export const getCurrentUser = async (user_id: number) => {
 
 export const logoutUser = async (user_id: number, business_id: number): Promise<void> => {
   await logAudit(business_id, user_id, "LOGOUT", "User", user_id, null, null);
+};
+
+// --- Self-service onboarding ---
+
+// TODO: add CAPTCHA (Cloudflare Turnstile) before opening signup to heavy traffic
+export const signupBusiness = async (data: {
+  business_name: string;
+  name: string;
+  email: string;
+  password: string;
+}) => {
+  const existing = await prisma.user.findUnique({ where: { email: data.email } });
+  if (existing) throw new AppError(409, "Email already in use");
+
+  const adminRole = await prisma.role.findUnique({ where: { role_name: "admin" } });
+  if (!adminRole) throw new AppError(500, "Roles are not seeded");
+
+  const base = slugify(data.business_name) || "business";
+  let slug = base;
+  for (let i = 2; await prisma.business.findUnique({ where: { slug } }); i++) {
+    slug = `${base}-${i}`;
+  }
+
+  const password_hash = await bcrypt.hash(data.password, 10);
+  const { business, user } = await prisma.$transaction(async (tx) => {
+    const business = await tx.business.create({
+      data: { name: data.business_name, slug, status: "pending" },
+    });
+    const user = await tx.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        password_hash,
+        role_id: adminRole.role_id,
+        business_id: business.business_id,
+        email_verified: false,
+      },
+    });
+    return { business, user };
+  });
+
+  await logAudit(business.business_id, user.user_id, "SIGNUP", "Business", business.business_id, null, {
+    name: business.name,
+    slug: business.slug,
+  });
+
+  const token = await createAuthToken(user.user_id, "EMAIL_VERIFICATION");
+  const link = await sendVerificationEmail(user.email, business.name, token);
+
+  return {
+    message: "Account created — check your email to verify your account",
+    dev_link: devLink(link),
+  };
+};
+
+export const verifyEmail = async (rawToken: string) => {
+  const user_id = await consumeAuthToken(rawToken, "EMAIL_VERIFICATION");
+
+  const user = await prisma.user.findUnique({ where: { user_id } });
+  if (!user) throw new AppError(400, "This link is invalid or has expired");
+
+  await prisma.$transaction([
+    prisma.user.update({ where: { user_id }, data: { email_verified: true } }),
+    prisma.business.updateMany({
+      where: { business_id: user.business_id, status: "pending" },
+      data: { status: "active" },
+    }),
+  ]);
+
+  return { message: "Email verified — you can now sign in" };
+};
+
+const GENERIC_TOKEN_RESPONSE = { message: "If that account exists, a link has been sent to its email" };
+
+export const resendVerification = async (email: string) => {
+  const user = await prisma.user.findUnique({ where: { email }, include: { business: true } });
+  if (!user || user.email_verified) return GENERIC_TOKEN_RESPONSE;
+
+  const token = await createAuthToken(user.user_id, "EMAIL_VERIFICATION");
+  const link = await sendVerificationEmail(user.email, user.business.name, token);
+  return { ...GENERIC_TOKEN_RESPONSE, dev_link: devLink(link) };
+};
+
+export const forgotPassword = async (email: string) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return GENERIC_TOKEN_RESPONSE;
+
+  const token = await createAuthToken(user.user_id, "PASSWORD_RESET");
+  const link = await sendPasswordResetEmail(user.email, token);
+  return { ...GENERIC_TOKEN_RESPONSE, dev_link: devLink(link) };
+};
+
+export const resetPassword = async (rawToken: string, newPassword: string) => {
+  const user_id = await consumeAuthToken(rawToken, "PASSWORD_RESET");
+
+  const user = await prisma.user.findUnique({ where: { user_id } });
+  if (!user) throw new AppError(400, "This link is invalid or has expired");
+
+  const password_hash = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({ where: { user_id }, data: { password_hash } });
+
+  // never log password values — record only that the change happened
+  await logAudit(user.business_id, user_id, "RESET_PASSWORD", "User", user_id, null, null);
+
+  return { message: "Password updated — you can now sign in" };
 };
