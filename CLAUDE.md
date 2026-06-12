@@ -155,19 +155,37 @@ All mutating routes must call `logAudit()` from `audit.middleware.ts` after the 
 
 ---
 
+## Multi-Tenancy
+
+CraftStock is multi-tenant: each `Business` is an isolated tenant sharing one backend and one database.
+
+- **Tenant scoping convention:** every service function takes `business_id` (from `req.user!.business_id`) and every Prisma query filters by it. Lookups by primary key use `findFirst({ where: { <pk>, business_id } })`, never bare `findUnique`. Cross-table references (e.g. movements → materials) must verify the referenced row belongs to the caller's business.
+- `logAudit(business_id, user_id, action, table, record_id, old, new)` — audit rows are tenant-scoped.
+- SKUs are unique **per business** (`@@unique([business_id, sku])`); emails are globally unique.
+- `Role` is a global lookup table shared by all tenants.
+- Tokens without `business_id` (pre-multi-tenant) are rejected with 401 by `authenticate`.
+
 ## Auth & RBAC
 
 ### JWT Flow
-1. `POST /auth/login` → returns `{ token, user }`
+1. `POST /auth/login` → returns `{ token, user }` (user includes `business: { business_id, name }`)
 2. Token stored in `localStorage`; injected via Axios interceptor
-3. Token payload: `{ user_id, role, email, exp: 24h }`
+3. Token payload: `{ user_id, role, email, business_id, exp: 24h }`
 4. `middleware.ts` decodes token from cookie for server-side route protection
+5. Login is blocked (403) for unverified emails and non-active businesses
 
-### User Registration (Admin-only)
-No public self-registration. Admins create users via:
-- **Backend:** `POST /auth/register` (requires admin JWT) — body: `{ name, email, password, role_name }`
+### Self-Service Business Signup
+- `POST /auth/signup` — public; creates Business (`pending`) + first admin (unverified) + emailed verification link
+- `POST /auth/verify-email` — single-use token (24h); activates the business
+- `POST /auth/resend-verification`, `/auth/forgot-password` (1h token), `/auth/reset-password` — always return generic 200s (no account enumeration)
+- All credential endpoints rate-limited (10 req / 15 min / IP); CAPTCHA is a deferred TODO
+- Email via Resend behind `EMAIL_ENABLED`; when disabled, links are console-logged and returned as `dev_link` outside production
+- Stale `pending` businesses (>7 days) purged via `POST /internal/cleanup-unverified` (CRON_SECRET header), called daily by `.github/workflows/cleanup-unverified.yml`
+
+### Staff Registration (Admin-only, within a business)
+- **Backend:** `POST /auth/register` (requires admin JWT) — body: `{ name, email, password, role_name }`; staff inherit the admin's business and skip email verification
 - **Frontend:** `/users` page — admin-only UI to add/remove users with role assignment
-- **Bootstrap:** First admin created via `npx prisma db seed` (`admin@craftstock.com` / `changeme123`)
+- **Bootstrap:** Seed tenant + admin via `npx prisma db seed` (`admin@craftstock.com` / `changeme123`, business `larahs-inventory`)
 
 ### Roles & Permissions
 | Role | Access |
@@ -190,10 +208,10 @@ Use `authorize('admin', 'store_manager')` on routes — never hardcode role chec
   - `DIRECT_URL` — direct endpoint (migrations only)
 
 ### Core Models
-`Role` → `User` → `StockMovement` (issued/approved/confirmed by User)
-`Material` → `StockMovement`
-`FinishedGood` → `StockMovement`
-`AuditLog` → `User`
+`Business` → `User`, `Material`, `FinishedGood`, `StockMovement`, `AuditLog` (all tenant-scoped, Cascade delete)
+`Role` → `User` (global lookup)
+`User` → `StockMovement` (issued/approved/confirmed by User), `AuthToken` (verification/reset tokens)
+`Material` / `FinishedGood` → `StockMovement`
 
 ---
 
@@ -207,7 +225,12 @@ JWT_SECRET=your-secret-key
 JWT_EXPIRES_IN=24h
 PORT=4000
 NODE_ENV=development
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:3000          # comma-separated CORS allowlist
+APP_URL=http://localhost:3000               # base URL for emailed links
+CRON_SECRET=change-me                       # guards /internal/cleanup-unverified
+EMAIL_ENABLED=false                         # true requires RESEND_API_KEY + verified domain
+RESEND_API_KEY=
+EMAIL_FROM="CraftStock <onboarding@resend.dev>"
 ```
 
 ### Frontend (`apps/frontend/.env.local`)
