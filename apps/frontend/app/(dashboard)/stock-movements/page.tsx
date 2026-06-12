@@ -87,7 +87,7 @@ export default function StockMovementsPage() {
       accessorKey: "movement_type",
       header: "Type",
       cell: ({ row }) => (
-        <span className={`text-xs font-medium px-2 py-1 rounded-full ${BADGE_COLORS[row.original.movement_type]}`}>
+        <span className={`text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ${BADGE_COLORS[row.original.movement_type]}`}>
           {row.original.movement_type}
         </span>
       ),

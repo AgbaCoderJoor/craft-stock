@@ -92,7 +92,7 @@ export default function UsersPage() {
       header: "Role",
       accessorFn: (row) => row.role.role_name,
       cell: ({ row }) => (
-        <span className={`text-xs font-medium px-2 py-1 rounded-full ${ROLE_COLORS[row.original.role.role_name] ?? "bg-gray-100 text-gray-800"}`}>
+        <span className={`text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ${ROLE_COLORS[row.original.role.role_name] ?? "bg-gray-100 text-gray-800"}`}>
           {ROLE_LABELS[row.original.role.role_name] ?? row.original.role.role_name}
         </span>
       ),

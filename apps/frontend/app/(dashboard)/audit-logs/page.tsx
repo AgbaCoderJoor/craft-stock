@@ -50,7 +50,7 @@ export default function AuditLogsPage() {
       accessorKey: "action",
       header: "Action",
       cell: ({ row }) => (
-        <span className={`text-xs font-medium px-2 py-1 rounded-full ${ACTION_COLORS[row.original.action] ?? "bg-gray-100 text-gray-800"}`}>
+        <span className={`text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ${ACTION_COLORS[row.original.action] ?? "bg-gray-100 text-gray-800"}`}>
           {row.original.action}
         </span>
       ),
