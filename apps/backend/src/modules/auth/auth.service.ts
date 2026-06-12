@@ -61,6 +61,21 @@ export const deleteUser = async (id: number, requesting_user_id: number) => {
   await prisma.user.delete({ where: { user_id: id } });
 };
 
+export const changeUserPassword = async (
+  id: number,
+  newPassword: string,
+  requesting_user_id: number
+): Promise<void> => {
+  const user = await prisma.user.findUnique({ where: { user_id: id } });
+  if (!user) throw new AppError(404, "User not found");
+
+  const password_hash = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({ where: { user_id: id }, data: { password_hash } });
+
+  // never log password values — record only that the change happened
+  await logAudit(requesting_user_id, "CHANGE_PASSWORD", "User", id, null, null);
+};
+
 export const getCurrentUser = async (user_id: number) => {
   const user = await prisma.user.findUnique({
     where: { user_id },

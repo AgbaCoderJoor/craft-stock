@@ -47,7 +47,10 @@ export default function UsersPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [pwdUser, setPwdUser] = useState<UserRecord | null>(null);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const { register, handleSubmit, setValue, reset, formState: { isSubmitting } } = useForm<RegisterForm>();
+  const pwdForm = useForm<{ password: string }>();
 
   const { data: users = [], isLoading } = useQuery<UserRecord[]>({
     queryKey: ["users"],
@@ -64,6 +67,13 @@ export default function UsersPage() {
     mutationFn: (id: number) => api.delete(`/auth/users/${id}`),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["users"] }); toast.success("User removed"); },
     onError: (err: unknown) => toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Failed to remove user"),
+  });
+
+  const passwordMutation = useMutation({
+    mutationFn: ({ id, password }: { id: number; password: string }) =>
+      api.patch(`/auth/users/${id}/password`, { password }),
+    onSuccess: () => { toast.success("Password updated"); setPwdUser(null); pwdForm.reset(); },
+    onError: (err: unknown) => toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Failed to update password"),
   });
 
   const columns = useMemo<ColumnDef<UserRecord>[]>(() => [
@@ -100,9 +110,18 @@ export default function UsersPage() {
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate(row.original.user_id)}>
-          Remove
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => { pwdForm.reset(); setShowNewPassword(false); setPwdUser(row.original); }}
+          >
+            Change Password
+          </Button>
+          <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate(row.original.user_id)}>
+            Remove
+          </Button>
+        </div>
       ),
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -187,6 +206,60 @@ export default function UsersPage() {
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? "Creating…" : "Create User"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!pwdUser} onOpenChange={(o) => { if (!o) { setPwdUser(null); pwdForm.reset(); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground -mt-2">
+            Set a new password for <span className="font-medium text-gray-700">{pwdUser?.name}</span> ({pwdUser?.email}).
+          </p>
+          <form
+            onSubmit={pwdForm.handleSubmit((d) => {
+              if (pwdUser) passwordMutation.mutate({ id: pwdUser.user_id, password: d.password });
+            })}
+            className="space-y-4"
+          >
+            <div className="space-y-1">
+              <Label>New Password</Label>
+              <div className="relative">
+                <Input
+                  type={showNewPassword ? "text" : "password"}
+                  {...pwdForm.register("password", { required: true, minLength: 8 })}
+                  placeholder="Min 8 characters"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 focus:outline-none"
+                  aria-label={showNewPassword ? "Hide password" : "Show password"}
+                >
+                  <span className="relative flex items-center justify-center w-4 h-4">
+                    <Eye
+                      className={`absolute transition-all duration-200 w-4 h-4 ${
+                        showNewPassword ? "opacity-100 scale-100" : "opacity-0 scale-75"
+                      }`}
+                    />
+                    <EyeOff
+                      className={`absolute transition-all duration-200 w-4 h-4 ${
+                        showNewPassword ? "opacity-0 scale-75" : "opacity-100 scale-100"
+                      }`}
+                    />
+                  </span>
+                </button>
+              </div>
+              {pwdForm.formState.errors.password && (
+                <p className="text-xs text-destructive">Password must be at least 8 characters</p>
+              )}
+            </div>
+            <Button type="submit" className="w-full" disabled={passwordMutation.isPending}>
+              {passwordMutation.isPending ? "Updating…" : "Update Password"}
             </Button>
           </form>
         </DialogContent>
