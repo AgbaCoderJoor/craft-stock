@@ -16,7 +16,7 @@ export const list = async (req: AuthRequest, res: Response, next: NextFunction):
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
-    const result = await getAllMovements(page, limit);
+    const result = await getAllMovements(req.user!.business_id, page, limit);
     res.json(result);
   } catch (err) {
     next(err);
@@ -26,7 +26,7 @@ export const list = async (req: AuthRequest, res: Response, next: NextFunction):
 export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const data = CreateMovementSchema.parse(req.body);
-    const movement = await createMovement(data, req.user!.user_id);
+    const movement = await createMovement(data, req.user!.user_id, req.user!.business_id);
     res.status(201).json(movement);
   } catch (err) {
     next(err);
@@ -35,7 +35,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
 
 export const approve = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const movement = await approveMovement(Number(req.params.id), req.user!.user_id, req.user!.role);
+    const movement = await approveMovement(Number(req.params.id), req.user!.user_id, req.user!.role, req.user!.business_id);
     res.json(movement);
   } catch (err) {
     next(err);
@@ -44,7 +44,7 @@ export const approve = async (req: AuthRequest, res: Response, next: NextFunctio
 
 export const confirm = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const movement = await confirmMovement(Number(req.params.id), req.user!.user_id);
+    const movement = await confirmMovement(Number(req.params.id), req.user!.user_id, req.user!.business_id);
     res.json(movement);
   } catch (err) {
     next(err);

@@ -1,12 +1,12 @@
 import { prisma } from "../../config/db";
 
-export const getMovementsTrend = async (days: number = 30) => {
+export const getMovementsTrend = async (business_id: number, days: number = 30) => {
   const since = new Date();
   since.setDate(since.getDate() - days);
   since.setHours(0, 0, 0, 0);
 
   const movements = await prisma.stockMovement.findMany({
-    where: { movement_date: { gte: since } },
+    where: { business_id, movement_date: { gte: since } },
     select: { movement_date: true, movement_type: true, quantity: true },
     orderBy: { movement_date: "asc" },
   });
@@ -30,8 +30,9 @@ export const getMovementsTrend = async (days: number = 30) => {
   return Object.values(dateMap);
 };
 
-export const getInventoryByCategory = async () => {
+export const getInventoryByCategory = async (business_id: number) => {
   const materials = await prisma.material.findMany({
+    where: { business_id },
     select: { category: true, cost_price: true, quantity_available: true },
   });
 
@@ -49,8 +50,9 @@ export const getInventoryByCategory = async () => {
   return Object.values(grouped).sort((a, b) => b.value - a.value);
 };
 
-export const getTopMaterials = async (limit: number = 10) => {
+export const getTopMaterials = async (business_id: number, limit: number = 10) => {
   const materials = await prisma.material.findMany({
+    where: { business_id },
     select: { name: true, cost_price: true, quantity_available: true, minimum_stock: true },
   });
 
@@ -66,9 +68,10 @@ export const getTopMaterials = async (limit: number = 10) => {
     .slice(0, limit);
 };
 
-export const getMovementDistribution = async () => {
+export const getMovementDistribution = async (business_id: number) => {
   const result = await prisma.stockMovement.groupBy({
     by: ["movement_type"],
+    where: { business_id },
     _count: { movement_id: true },
     _sum: { quantity: true },
   });
@@ -80,8 +83,9 @@ export const getMovementDistribution = async () => {
   }));
 };
 
-export const getFinishedGoodsSummary = async () => {
+export const getFinishedGoodsSummary = async (business_id: number) => {
   return prisma.finishedGood.findMany({
+    where: { business_id },
     select: {
       name: true,
       quantity_produced: true,

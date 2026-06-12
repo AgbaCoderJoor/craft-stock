@@ -6,7 +6,7 @@ export const list = async (req: AuthRequest, res: Response, next: NextFunction):
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 50;
-    res.json(await getAllAuditLogs(page, limit));
+    res.json(await getAllAuditLogs(req.user!.business_id, page, limit));
   } catch (err) {
     next(err);
   }

@@ -16,6 +16,12 @@ async function main() {
   const adminRole = await prisma.role.findUnique({ where: { role_name: "admin" } });
   if (!adminRole) throw new Error("Admin role not found after seeding.");
 
+  const business = await prisma.business.upsert({
+    where: { slug: "larahs-inventory" },
+    update: {},
+    create: { name: "Larah's Inventory", slug: "larahs-inventory", status: "active" },
+  });
+
   await prisma.user.upsert({
     where: { email: "admin@craftstock.com" },
     update: {},
@@ -24,6 +30,8 @@ async function main() {
       email: "admin@craftstock.com",
       password_hash: await bcrypt.hash("changeme123", 10),
       role_id: adminRole.role_id,
+      business_id: business.business_id,
+      email_verified: true,
     },
   });
 

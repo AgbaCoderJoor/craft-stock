@@ -9,6 +9,26 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum BusinessStatus {
+  pending
+  active
+  suspended
+}
+
+model Business {
+  business_id Int            @id @default(autoincrement())
+  name        String
+  slug        String         @unique
+  status      BusinessStatus @default(pending)
+  created_at  DateTime       @default(now())
+
+  users           User[]
+  materials       Material[]
+  finished_goods  FinishedGood[]
+  stock_movements StockMovement[]
+  audit_logs      AuditLog[]
+}
+
 model Role {
   role_id   Int    @id @default(autoincrement())
   role_name String @unique
@@ -17,22 +37,48 @@ model Role {
 }
 
 model User {
-  user_id       Int      @id @default(autoincrement())
-  name          String
-  email         String   @unique
-  password_hash String
-  role_id       Int
-  created_at    DateTime @default(now())
+  user_id        Int      @id @default(autoincrement())
+  business_id    Int
+  name           String
+  email          String   @unique
+  password_hash  String
+  role_id        Int
+  email_verified Boolean  @default(false)
+  created_at     DateTime @default(now())
 
+  business             Business        @relation(fields: [business_id], references: [business_id], onDelete: Cascade)
   role                 Role            @relation(fields: [role_id], references: [role_id])
   issued_movements     StockMovement[] @relation("IssuedBy")
   approved_movements   StockMovement[] @relation("ApprovedBy")
   confirmed_movements  StockMovement[] @relation("ConfirmedBy")
   audit_logs           AuditLog[]
+  auth_tokens          AuthToken[]
+
+  @@index([business_id])
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model AuthToken {
+  token_id   Int       @id @default(autoincrement())
+  user_id    Int
+  token_hash String    @unique
+  type       TokenType
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id, type])
 }
 
 model Material {
   material_id        Int      @id @default(autoincrement())
+  business_id        Int
   name               String
   category           String
   supplier           String?
@@ -43,13 +89,17 @@ model Material {
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 
+  business        Business        @relation(fields: [business_id], references: [business_id], onDelete: Cascade)
   stock_movements StockMovement[]
+
+  @@index([business_id])
 }
 
 model FinishedGood {
   finished_id       Int       @id @default(autoincrement())
+  business_id       Int
   name              String
-  sku               String    @unique
+  sku               String
   size              String?
   quantity_produced Int       @default(0)
   quantity_sold     Int       @default(0)
@@ -58,7 +108,11 @@ model FinishedGood {
   created_at        DateTime  @default(now())
   updated_at        DateTime  @updatedAt
 
+  business        Business        @relation(fields: [business_id], references: [business_id], onDelete: Cascade)
   stock_movements StockMovement[]
+
+  @@unique([business_id, sku])
+  @@index([business_id])
 }
 
 enum MovementType {
@@ -70,6 +124,7 @@ enum MovementType {
 
 model StockMovement {
   movement_id   Int          @id @default(autoincrement())
+  business_id   Int
   material_id   Int?
   finished_id   Int?
   movement_type MovementType
@@ -80,22 +135,29 @@ model StockMovement {
   confirmed_by  Int?
   movement_date DateTime     @default(now())
 
+  business  Business      @relation(fields: [business_id], references: [business_id], onDelete: Cascade)
   material  Material?    @relation(fields: [material_id], references: [material_id])
   finished  FinishedGood? @relation(fields: [finished_id], references: [finished_id])
   issuer    User         @relation("IssuedBy", fields: [issued_by], references: [user_id])
   approver  User?        @relation("ApprovedBy", fields: [approved_by], references: [user_id])
   confirmer User?        @relation("ConfirmedBy", fields: [confirmed_by], references: [user_id])
+
+  @@index([business_id])
 }
 
 model AuditLog {
-  log_id     Int      @id @default(autoincrement())
-  user_id    Int
-  action     String
-  table_name String
-  record_id  Int
-  old_value  Json?
-  new_value  Json?
-  created_at DateTime @default(now())
+  log_id      Int      @id @default(autoincrement())
+  business_id Int
+  user_id     Int
+  action      String
+  table_name  String
+  record_id   Int
+  old_value   Json?
+  new_value   Json?
+  created_at  DateTime @default(now())
 
-  user User @relation(fields: [user_id], references: [user_id])
+  business Business @relation(fields: [business_id], references: [business_id], onDelete: Cascade)
+  user     User     @relation(fields: [user_id], references: [user_id])
+
+  @@index([business_id])
 }
